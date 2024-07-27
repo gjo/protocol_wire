@@ -7,7 +7,7 @@ name = "protocol_wire"
 version = "0.1.dev0"
 description = "Protocol Adapter Registry"
 dynamic = ["readme"]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [{name = "Gouji Ochiai", email = "gjo.ext@gmail.com"}]
 classifiers = [
@@ -16,10 +16,10 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
   "Programming Language :: Python",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: Implementation :: CPython",
   "Topic :: Software Development :: Libraries",
   "Topic :: Utilities",
@@ -33,20 +33,15 @@ testing = [
   "pytest-asyncio",
 ]
 develop = [
-  "black~=23.1",
   "build",
   "check-manifest",
   "coverage",
-  "flake8",
-  "flake8-pyproject",
-  "invoke",
-  "isort~=5.12",
-  "lingua",
   "mypy",
   "pytest",
   "pytest-asyncio",
   "pytest-randomly",
   "readme-renderer[md]",
+  "ruff~=0.5.5",
   "tox",
   "twine",
 ]
@@ -55,16 +50,6 @@ develop = [
 dynamic = {readme = {file = ["README.rst", "CHANGES.rst"]}}
 packages.find = {where = ["src"]}
 zip-safe = false
-
-[tool.distutils.bdist_wheel]
-universal = false
-
-[tool.black]
-line-length = 119
-target-version = ["py39", "py310", "py311", "py312"]
-
-[tool.check-manifest]
-ignore-bad-ideas = ["*.mo"]
 
 [tool.coverage.paths]
 source = ["src/", ".tox/**/site-packages/"]
@@ -81,25 +66,37 @@ exclude_also = [
 branch = true
 source = ["src", "tests"]
 
-[tool.flake8]
-extend-ignore = ["E203"]
-max-line-length = 119
-show-source = true
-
-[tool.isort]
-line_length = 119
-profile = "black"
-skip_gitignore = true
-
 [tool.mypy]
 show_error_codes = true
-# See https://github.com/python/mypy/issues/4717
-# disable_error_code = "type-abstract"
+
+[tool.ruff]
+line-length = 119
+target-version = 'py310'
+
+[tool.ruff.format]
+docstring-code-format = true
+preview = true
+
+[tool.ruff.lint]
+extend-select = [
+  'F',  # pyflakes
+  'E',  # pydocstyle
+  'W',  # pydocstyle
+  'I',  # isort
+  'EM',  # flake8-errmsg
+  'G',  # flak8-logging-format
+  'LOG',  # flak8-logging
+  'RUF100',  # unused noqa
+]
+extend-ignore = [
+  'EM101',  # Exception must not use a string literal
+]
+preview = true
 
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py{39,310,311,312},coverage,lint,mypy
+envlist = py{310,311,312,313},coverage,lint,mypy
 isolated_build = True
 
 [testenv]
@@ -108,6 +105,7 @@ deps =
   coverage: coverage
   mypy: mypy
 extras = testing
+install_command = python -m pip install -c constraints.txt {opts} {packages}
 
 [testenv:coverage]
 commands =
@@ -118,21 +116,17 @@ commands =
 [testenv:lint]
 skip_install = true
 commands =
+  ruff format --check src tests
+  ruff check src tests
+  check-manifest
   python -c 'import shutil; shutil.rmtree("dist/tox", True)'
   python -m build --wheel --outdir dist/tox
   twine check dist/tox/*.whl
-  check-manifest
-  isort --check-only --diff src tests
-  black --check --diff src tests
-  flake8 src tests
 deps =
-  black
   build
   check-manifest
-  flake8
-  flake8-pyproject
-  isort
   readme_renderer[md]
+  ruff
   twine
 
 [testenv:mypy]
@@ -142,9 +136,8 @@ commands = mypy --strict --no-incremental src tests
 [testenv:codeformat]
 skip_install = true
 commands =
-  isort src tests
-  black src tests
+  ruff format src tests
+  ruff check --fix src tests
 deps =
-  black
-  isort
+  ruff
 """

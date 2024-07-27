@@ -26,6 +26,11 @@ async def async_foo_factory(container: "Container") -> Foo:
     return FooImpl()
 
 
+class FooImpl2(Foo):
+    def __init__(self, container: "Container") -> None:
+        self.some = "some"
+
+
 def test_factory() -> None:
     from protocol_wire.registry import Registry
 
@@ -99,6 +104,19 @@ def test_factory_method() -> None:
     container = registry.create_container()
     ins = container.find(Foo)
     assert isinstance(ins, FooImpl)
+
+
+def test_factory_constructor() -> None:
+    from protocol_wire.registry import Registry
+
+    registry = Registry()
+    registry.register_factory(FooImpl2, Foo)
+    fac = registry.find_factory(Foo)
+    assert fac is FooImpl2
+
+    container = registry.create_container()
+    ins = container.find(Foo)
+    assert isinstance(ins, FooImpl2)
 
 
 def test_instance() -> None:

@@ -1,3 +1,3 @@
-from .registry import Container, Registry
+from .registry import Configurator, Container, Registry
 
-__all__ = ["Container", "Registry"]
+__all__ = ["Configurator", "Container", "Registry"]
