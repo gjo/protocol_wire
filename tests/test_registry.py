@@ -1,8 +1,9 @@
-from typing import TYPE_CHECKING, Protocol
+import typing
+from typing import Protocol
 
 import pytest
 
-if TYPE_CHECKING:
+if typing.TYPE_CHECKING:
     from protocol_wire.registry import Container
 
 
@@ -14,20 +15,20 @@ class FooImpl(Foo):
     some = "some"
 
     @classmethod
-    def factory(cls, container: "Container") -> "Foo":
+    def factory(cls, container: Container) -> Foo:
         return cls()
 
 
-def foo_factory(container: "Container") -> Foo:
+def foo_factory(container: Container) -> Foo:
     return FooImpl()
 
 
-async def async_foo_factory(container: "Container") -> Foo:
+async def async_foo_factory(container: Container) -> Foo:
     return FooImpl()
 
 
 class FooImpl2(Foo):
-    def __init__(self, container: "Container") -> None:
+    def __init__(self, container: Container) -> None:
         self.some = "some"
 
 
@@ -136,37 +137,46 @@ def test_instance() -> None:
     assert isinstance(ins2, FooImpl)
 
 
+def test_rases_spec_is_not_protocol() -> None:
+    from protocol_wire.exceptions import SpecIsNotProtocolError
+    from protocol_wire.registry import Registry
+
+    registry = Registry()
+    with pytest.raises(SpecIsNotProtocolError):
+        registry.register_factory(foo_factory, FooImpl)
+
+
 def test_raises_already_registered() -> None:
-    from protocol_wire.exceptions import AlreadyRegistered
+    from protocol_wire.exceptions import AlreadyRegisteredError
     from protocol_wire.registry import Registry
 
     registry = Registry()
     registry.register_factory(foo_factory, Foo)
-    with pytest.raises(AlreadyRegistered):
+    with pytest.raises(AlreadyRegisteredError):
         registry.register_factory(foo_factory, Foo)
 
 
 def test_raises_does_not_registered() -> None:
-    from protocol_wire.exceptions import DoesNotRegistered
+    from protocol_wire.exceptions import DoesNotRegisteredError
     from protocol_wire.registry import Registry
 
     registry = Registry()
-    with pytest.raises(DoesNotRegistered):
+    with pytest.raises(DoesNotRegisteredError):
         registry.find_factory(Foo)
 
 
 def test_raises_is_not_singleton() -> None:
-    from protocol_wire.exceptions import IsNotSingleton
+    from protocol_wire.exceptions import IsNotSingletonError
     from protocol_wire.registry import Registry
 
     registry = Registry()
     registry.register_factory(foo_factory, Foo)
-    with pytest.raises(IsNotSingleton):
+    with pytest.raises(IsNotSingletonError):
         registry.find_instance(Foo)
 
 
 def test_raises_does_not_support_awaitable() -> None:
-    from protocol_wire.exceptions import DoesNotSupportAwaitable
+    from protocol_wire.exceptions import DoesNotSupportAwaitableError
     from protocol_wire.registry import Registry
 
     registry = Registry()
@@ -175,5 +185,5 @@ def test_raises_does_not_support_awaitable() -> None:
     assert fac is async_foo_factory
 
     container = registry.create_container()
-    with pytest.raises(DoesNotSupportAwaitable):
+    with pytest.raises(DoesNotSupportAwaitableError):
         container.find(Foo)

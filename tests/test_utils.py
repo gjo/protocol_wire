@@ -3,26 +3,32 @@ from typing import Protocol
 import pytest
 
 
-class PlainClass: ...
+class PlainClass:
+    pass
 
 
-class DeliveredProtocol(Protocol): ...
+class DeliveredProtocol(Protocol):
+    pass
 
 
-class NestedProtocol(DeliveredProtocol, Protocol): ...
+class NestedProtocol(DeliveredProtocol, Protocol):
+    pass
 
 
-class OtherProtocol(Protocol): ...
+class OtherProtocol(Protocol):
+    pass
 
 
-class DiamondProtocol(NestedProtocol, OtherProtocol, Protocol): ...
+class DiamondProtocol(NestedProtocol, OtherProtocol, Protocol):
+    pass
 
 
-class Implementation(DiamondProtocol): ...
+class Implementation(DiamondProtocol):
+    pass
 
 
 @pytest.mark.parametrize(
-    "type_,expected",
+    ("type_", "expected"),
     [
         (int, False),
         (str, False),
@@ -42,7 +48,7 @@ def test_is_protocol(type_: type, expected: bool) -> None:
 
 
 @pytest.mark.parametrize(
-    "type_,expected",
+    ("type_", "expected"),
     [
         (int, False),
         (str, False),

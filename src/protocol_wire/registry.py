@@ -1,25 +1,35 @@
 import inspect
-from collections.abc import Collection, Mapping
+import typing
 from importlib import import_module
-from types import ModuleType
-from typing import Any, Awaitable, Callable, Protocol, TypeVar, cast
+from typing import Any, Protocol, TypeVar, cast
 
-from .exceptions import AlreadyRegistered, DoesNotRegistered, DoesNotSupportAwaitable, IsNotSingleton
+from .exceptions import (
+    AlreadyRegisteredError,
+    DoesNotRegisteredError,
+    DoesNotSupportAwaitableError,
+    IsNotSingletonError,
+    SpecIsNotProtocolError,
+)
 from .utils import is_delivered_protocol
+
+if typing.TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Collection, Mapping
+    from types import ModuleType
+
 
 T = TypeVar("T")
 T_co = TypeVar("T_co", covariant=True)
 
 
 class Factory(Protocol[T_co]):
-    def __call__(self, container: "Container") -> T_co | Awaitable[T_co]: ...
+    def __call__(self, container: Container) -> T_co | Awaitable[T_co]: ...
 
 
 class Singleton(Factory[T]):
     def __init__(self, instance: T) -> None:
         self.instance = instance
 
-    def __call__(self, contaner: "Container") -> T:
+    def __call__(self, contaner: Container) -> T:
         return self.instance
 
 
@@ -28,28 +38,29 @@ class Registry:
         self.adaptors: dict[tuple[type | None, str], Any] = {}
 
     def register_factory(self, factory: Factory[T], spec: type[T] | None = None, *, name: str = "") -> None:
-        assert spec is None or is_delivered_protocol(spec)
+        if spec is not None and not is_delivered_protocol(spec):
+            raise SpecIsNotProtocolError(spec)
         k = spec, name
         if k in self.adaptors:
-            raise AlreadyRegistered(spec, name)
+            raise AlreadyRegisteredError(spec, name)
         self.adaptors[k] = factory
 
     def find_factory(self, spec: type[T] | None = None, *, name: str = "") -> Factory[T]:
         k = spec, name
         if k not in self.adaptors:
-            raise DoesNotRegistered(spec, name)
-        return cast(Factory[T], self.adaptors[k])
+            raise DoesNotRegisteredError(spec, name)
+        return cast("Factory[T]", self.adaptors[k])
 
     def register_instance(self, instance: T, spec: type[T] | None = None, *, name: str = "") -> None:
-        self.register_factory(cast(Factory[T], Singleton(instance)), spec, name=name)
+        self.register_factory(cast("Factory[T]", Singleton(instance)), spec, name=name)
 
     def find_instance(self, spec: type[T] | None = None, *, name: str = "") -> T:
         factory = self.find_factory(spec, name=name)
         if isinstance(factory, Singleton):
-            return cast(T, factory.instance)
-        raise IsNotSingleton(spec, name)
+            return cast("T", factory.instance)
+        raise IsNotSingletonError(spec, name)
 
-    def create_container(self) -> "Container":
+    def create_container(self) -> Container:
         return Container(registry=self)
 
 
@@ -62,11 +73,10 @@ class Container:
         k = spec, name
         if k not in self.cache:
             factory = self.registry.find_factory(spec, name=name)
-            instance = factory(self)
-            if inspect.isawaitable(instance):
-                raise DoesNotSupportAwaitable(spec, name)
-            self.cache[k] = instance
-        return cast(T, self.cache[k])
+            if inspect.iscoroutinefunction(factory):
+                raise DoesNotSupportAwaitableError(spec, name)
+            self.cache[k] = factory(self)
+        return cast("T", self.cache[k])
 
     async def async_find(self, spec: type[T] | None = None, *, name: str = "") -> T:
         k = spec, name
@@ -78,7 +88,7 @@ class Container:
             else:
                 instance = maybe_instance
             self.cache[k] = instance
-        return cast(T, self.cache[k])
+        return cast("T", self.cache[k])
 
 
 class Configurator:
@@ -103,5 +113,6 @@ class Configurator:
             overrides = {}
         for module_name in module_names:
             if module_name in overrides:
-                module_name = overrides[module_name]
-            self.include(module_name)
+                self.include(overrides[module_name])
+            else:
+                self.include(module_name)

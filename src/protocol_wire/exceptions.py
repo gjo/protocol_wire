@@ -2,17 +2,21 @@ class ProtocolWireError(Exception):
     pass
 
 
-class AlreadyRegistered(ProtocolWireError):
+class AlreadyRegisteredError(ProtocolWireError):
     pass
 
 
-class DoesNotRegistered(ProtocolWireError):
+class DoesNotRegisteredError(ProtocolWireError):
     pass
 
 
-class IsNotSingleton(ProtocolWireError):
+class IsNotSingletonError(ProtocolWireError):
     pass
 
 
-class DoesNotSupportAwaitable(ProtocolWireError):
+class DoesNotSupportAwaitableError(ProtocolWireError):
+    pass
+
+
+class SpecIsNotProtocolError(ProtocolWireError):
     pass

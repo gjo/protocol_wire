@@ -1,4 +1,4 @@
-def test_include():
+def test_include() -> None:
     from protocol_wire import Configurator, Registry
 
     registry = Registry()
@@ -22,7 +22,7 @@ def test_include():
     container.find(Bar)
 
 
-def test_include_many():
+def test_include_many() -> None:
     from protocol_wire import Configurator, Registry
 
     registry = Registry()
@@ -33,7 +33,7 @@ def test_include_many():
     assert len(config.included) == 2
 
 
-def test_include_many_override():
+def test_include_many_override() -> None:
     from protocol_wire import Configurator, Registry
 
     registry = Registry()

@@ -1,143 +1,168 @@
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ['setuptools', 'wheel']
+build-backend = 'setuptools.build_meta'
 
 [project]
-name = "protocol_wire"
-version = "0.1.dev0"
-description = "Protocol Adapter Registry"
-dynamic = ["readme"]
-requires-python = ">=3.10"
-license = {text = "MIT"}
-authors = [{name = "Gouji Ochiai", email = "gjo.ext@gmail.com"}]
+name = 'protocol_wire'
+version = '0.1.dev0'
+description = 'Protocol Adapter Registry'
+dynamic = ['readme']
+requires-python = '>=3.14'
+license-files = ['COPYING.txt']
+authors = [{name = 'Gouji Ochiai', email = 'gjo.ext@gmail.com'}]
 classifiers = [
-  "Development Status :: 1 - Planning",
-  "Intended Audience :: Developers",
-  "License :: OSI Approved :: MIT License",
-  "Operating System :: OS Independent",
-  "Programming Language :: Python",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: 3.13",
-  "Programming Language :: Python :: Implementation :: CPython",
-  "Topic :: Software Development :: Libraries",
-  "Topic :: Utilities",
+  'Development Status :: 1 - Planning',
+  'Intended Audience :: Developers',
+  'Operating System :: OS Independent',
+  'Programming Language :: Python',
+  'Programming Language :: Python :: 3.14',
+  'Programming Language :: Python :: Implementation :: CPython',
+  'Programming Language :: Python :: Free Threading',
+  'Programming Language :: Python :: Free Threading :: 1 - Unstable',
+  'Topic :: Software Development :: Libraries',
+  'Topic :: Utilities',
 ]
-urls.repository = "https://github.com/gjo/protocol_wire"
+urls.repository = 'https://github.com/gjo/protocol_wire'
 dependencies = []
 
 [project.optional-dependencies]
 testing = [
-  "pytest",
-  "pytest-asyncio",
+  'pytest',
+  'pytest-asyncio',
+  'pytest-randomly',
 ]
 develop = [
-  "build",
-  "check-manifest",
-  "coverage",
-  "mypy",
-  "pytest",
-  "pytest-asyncio",
-  "pytest-randomly",
-  "readme-renderer[md]",
-  "ruff~=0.5.5",
-  "tox",
-  "twine",
+  'build',
+  'check-manifest',
+  'coverage',
+  'mypy',
+  'pytest',
+  'pytest-asyncio',
+  'pytest-randomly',
+  'readme-renderer[md]',
+  'ruff~=0.15.10',
+  'tox',
+  'twine',
 ]
 
 [tool.setuptools]
-dynamic = {readme = {file = ["README.rst", "CHANGES.rst"]}}
-packages.find = {where = ["src"]}
+dynamic = {readme = {file = ['README.rst', 'CHANGES.rst']}}
+packages.find = {where = ['src']}
 zip-safe = false
-
-[tool.coverage.paths]
-source = ["src/", ".tox/**/site-packages/"]
 
 [tool.coverage.report]
 show_missing = true
 fail_under = 100
-exclude_also = [
-  "\\.\\.\\.",
-  "if TYPE_CHECKING:",
-]
 
 [tool.coverage.run]
 branch = true
-source = ["src", "tests"]
+source = ['src', 'tests']
 
 [tool.mypy]
 show_error_codes = true
 
 [tool.ruff]
 line-length = 119
-target-version = 'py310'
+target-version = 'py314'
 
 [tool.ruff.format]
 docstring-code-format = true
 preview = true
 
 [tool.ruff.lint]
-extend-select = [
-  'F',  # pyflakes
-  'E',  # pydocstyle
-  'W',  # pydocstyle
-  'I',  # isort
-  'EM',  # flake8-errmsg
-  'G',  # flak8-logging-format
-  'LOG',  # flak8-logging
-  'RUF100',  # unused noqa
-]
-extend-ignore = [
-  'EM101',  # Exception must not use a string literal
+select = ['ALL']
+ignore = [
+  'COM812',  # Trailing comma missing
+  'D203',  # incorrect-blank-line-before-class
+  'D213',  # multi-line-summary-second-line
+
+  'ARG001',  # Unused function argument
+  'ARG002',  # Unused method argument
+  'ARG003',  # Unused class method argument
+  # 'RET504',  # Unnecessary assignment to `X` before `return` statement
+  # 'RUF067',  # `__init__` module should only contain docstrings and re-exports
+
+  'CPY001',  # Missing copyright notice at top of file
+  'D100',  # Missing docstring in public module
+  'D101',  # Missing docstring in public class
+  'D102',  # Missing docstring in public method
+  'D103',  # Missing docstring in public function
+  'D104',  # Missing docstring in public package
+  'D105',  # Missing docstring in magic method
+  'D107',  # Missing docstring in `__init__`
+  'TD001',  # Invalid TODO tag: `X`
+  'TD002',  # Missing author in TODO; try: `# TODO(<author_name>): ...` or `# TODO @<author_name>: ...`
+  'TD003',  # Missing issue link for this TODO
+  'FIX001',  # Line contains FIXME, consider resolving the issue
 ]
 preview = true
 
+[tool.ruff.lint.per-file-ignores]
+'tests/*' = [
+  'FBT001',  # Boolean-typed positional argument in function definition
+  'INP001',  # part of an implicit namespace package
+  'PLC0415',  # `import` should be at the top-level of a file'
+  'PLR2004',  # Magic value used in comparison
+  'RUF029',  # Function `X` is declared `async`, but doesn't `await` or use `async` features.
+  'S101',  # Use of `assert` detected
+  # 'SLF001',  # Private member accessed
+  'TC001',  # Move application import `X` into a type-checking block
+  'TC003',  # Move standard library import `X` into a type-checking block
+]
+
 [tool.tox]
-legacy_tox_ini = """
-[tox]
-envlist = py{310,311,312,313},coverage,lint,mypy
-isolated_build = True
+env_list = [
+  'py314',
+  'py314t',
+  'coverage',
+  'lint',
+  'mypy',
+]
+skip_missing_interpreters = true
 
-[testenv]
-commands = pytest
-deps =
-  coverage: coverage
-  mypy: mypy
-extras = testing
-install_command = python -m pip install -c constraints.txt {opts} {packages}
+[tool.tox.env_run_base]
+commands = [['pytest', '{posargs}']]
+extras = ['testing']
+use_frozen_constraints = true
+constraints = ['constraints.txt']
 
-[testenv:coverage]
-commands =
-  coverage erase
-  coverage run --source={envsitepackagesdir}/protocol_wire,tests -m pytest
-  coverage report
+[tool.tox.env.coverage]
+commands = [
+  ['coverage', 'erase'],
+  ['coverage', 'run', '-m', 'pytest', '{posargs}'],
+  ['coverage', 'report'],
+]
+deps = ['coverage']
+use_develop = true
 
-[testenv:lint]
+[tool.tox.env.lint]
 skip_install = true
-commands =
-  ruff format --check src tests
-  ruff check src tests
-  check-manifest
-  python -c 'import shutil; shutil.rmtree("dist/tox", True)'
-  python -m build --wheel --outdir dist/tox
-  twine check dist/tox/*.whl
-deps =
-  build
-  check-manifest
-  readme_renderer[md]
-  ruff
-  twine
+commands = [
+  ['ruff', 'format', '--check', 'src', 'tests'],
+  ['ruff', 'check', 'src', 'tests'],
+  ['check-manifest'],
+  ['python', '-c', 'import shutil; shutil.rmtree("dist/tox", True)'],
+  ['python', '-m', 'build', '--quiet', '--wheel', '--outdir', 'dist/tox'],
+  ['twine', 'check', 'dist/tox/*.whl'],
+]
+deps = [
+  'build',
+  'check-manifest',
+  'readme_renderer[md]',
+  'ruff',
+  'twine',
+]
 
-[testenv:mypy]
-commands = mypy --strict --no-incremental src tests
+[tool.tox.env.mypy]
+commands = [['mypy', '--no-incremental', '--strict', 'src', 'tests']]
+deps = ['mypy']
+use_develop = true
 
 # run explicit
-[testenv:codeformat]
+[tool.tox.env.codeformat]
 skip_install = true
-commands =
-  ruff format src tests
-  ruff check --fix src tests
-deps =
-  ruff
-"""
+commands = [
+  ['ruff', 'format', 'src', 'tests'],
+  ['ruff', 'check', '--fix', 'src', 'tests'],
+]
+deps = ['ruff']
